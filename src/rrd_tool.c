@@ -1,5 +1,5 @@
 /*****************************************************************************
- * RRDtool 1.4.7  Copyright by Tobi Oetiker, 1997-2012
+ * RRDtool 1.4.8  Copyright by Tobi Oetiker, 1997-2013
  *****************************************************************************
  * rrd_tool.c  Startup wrapper
  *****************************************************************************/
@@ -49,7 +49,7 @@ void PrintUsage(
 
     const char *help_main =
         N_("RRDtool %s"
-           "  Copyright 1997-2012 by Tobias Oetiker <tobi@oetiker.ch>\n"
+           "  Copyright 1997-2013 by Tobias Oetiker <tobi@oetiker.ch>\n"
            "               Compiled %s %s\n\n"
            "Usage: rrdtool [options] command command_options\n");
 
@@ -743,7 +743,7 @@ int HandleInputLine(
 
 #define pXJV(indent,fmt,tag,value) \
             if (json) { \
-               printf(indent "%s: " fmt ",\n",tag,value); \
+               printf(indent "\"%s\": " fmt ",\n",tag,value); \
             } else { \
                printf(indent "<%s>" fmt "</%s>\n",tag,value,tag); \
             }
@@ -757,7 +757,7 @@ int HandleInputLine(
             }
              
             if (json){
-                printf("    %s: [\n", LEGEND_TAG);
+                printf("    \"%s\": [\n", LEGEND_TAG);
             }
             else {
                 printf("    <%s>\n", LEGEND_TAG);
@@ -788,7 +788,7 @@ int HandleInputLine(
             }
             
             if (json){
-                printf("  %s: [\n",DATA_TAG);
+                printf("  \"%s\": [\n",DATA_TAG);
             } else {
                 printf("  <%s>\n", DATA_TAG);
             }

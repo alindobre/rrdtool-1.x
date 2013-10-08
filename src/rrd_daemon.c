@@ -105,7 +105,7 @@
 #include <tcpd.h>
 #endif /* HAVE_LIBWRAP */
 
-#include <glib-2.0/glib.h>
+#include <glib.h>
 /* }}} */
 
 #define RRDD_LOG(severity, ...) \
@@ -292,7 +292,9 @@ static int handle_request_help (HANDLER_PROTO);
 static void sig_common (const char *sig) /* {{{ */
 {
   RRDD_LOG(LOG_NOTICE, "caught SIG%s", sig);
-  state = FLUSHING;
+  if (state == RUNNING) {
+      state = FLUSHING;
+  }
   pthread_cond_broadcast(&flush_cond);
   pthread_cond_broadcast(&queue_cond);
 } /* }}} void sig_common */
@@ -3091,7 +3093,17 @@ static int read_options (int argc, char **argv) /* {{{ */
       {
         char journal_dir_actual[PATH_MAX];
         const char *dir;
-        dir = journal_dir = strdup(realpath((const char *)optarg, journal_dir_actual));
+        if (realpath((const char *)optarg, journal_dir_actual) == NULL)
+        {
+          fprintf(stderr, "Failed to canonicalize the journal directory '%s': %s\n",
+              optarg, rrd_strerror(errno));
+          return 7;
+        }
+        dir = journal_dir = strdup(journal_dir_actual);
+        if (dir == NULL) {
+          fprintf (stderr, "read_options: strdup failed.\n");
+          return (3);
+        }
 
         status = rrd_mkdir_p(dir, 0777);
         if (status != 0)

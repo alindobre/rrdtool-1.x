@@ -1,9 +1,9 @@
 /*****************************************************************************
- * RRDtool 1.4.7  Copyright by Tobi Oetiker, 1997-2012
+ * RRDtool 1.4.8  Copyright by Tobi Oetiker, 1997-2013
  *****************************************************************************
  * rrd_open.c  Open an RRD File
  *****************************************************************************
- * $Id: rrd_open.c 2267 2012-01-24 10:08:48Z oetiker $
+ * $Id$
  *****************************************************************************/
 
 #include "rrd_tool.h"
@@ -221,12 +221,20 @@ rrd_file_t *rrd_open(
         rrd_file->file_len = statb.st_size;
     } else {
         rrd_file->file_len = newfile_size;
+#ifdef HAVE_POSIX_FALLOCATE
+        if (posix_fallocate(rrd_simple_file->fd, 0, newfile_size) == -1) {
+            rrd_set_error("posix_fallocate '%s': %s", file_name,
+                          rrd_strerror(errno));
+            goto out_close;
+        }
+#else
         lseek(rrd_simple_file->fd, newfile_size - 1, SEEK_SET);
         if ( write(rrd_simple_file->fd, "\0", 1) == -1){    /* poke */
             rrd_set_error("write '%s': %s", file_name, rrd_strerror(errno));
             goto out_close;
         }
         lseek(rrd_simple_file->fd, 0, SEEK_SET);
+#endif
     }
 #ifdef HAVE_POSIX_FADVISE
     /* In general we need no read-ahead when dealing with rrd_files.
@@ -247,6 +255,7 @@ rrd_file_t *rrd_open(
 */
 
 #ifdef HAVE_MMAP
+#ifndef HAVE_POSIX_FALLOCATE
 	/* force allocating the file on the underlaying filesystem to prevent any
 	 * future bus error when the filesystem is full and attempting to write
 	 * trough the file mapping. Filling the file using memset on the file
@@ -278,6 +287,7 @@ rrd_file_t *rrd_open(
 
 		lseek(rrd_simple_file->fd, 0, SEEK_SET);
     }
+#endif
 
     data = mmap(0, rrd_file->file_len, 
         rrd_simple_file->mm_prot, rrd_simple_file->mm_flags,
@@ -290,9 +300,6 @@ rrd_file_t *rrd_open(
         goto out_close;
     }
     rrd_simple_file->file_start = data;
-    if (rdwr & RRD_CREAT) {
-        goto out_done;
-    }
 #endif
     if (rdwr & RRD_CREAT)
         goto out_done;
@@ -614,9 +621,11 @@ off_t rrd_seek(
     int whence)
 {
     off_t     ret = 0;
+#ifndef HAVE_MMAP
     rrd_simple_file_t *rrd_simple_file;
     rrd_simple_file = (rrd_simple_file_t *)rrd_file->pvt;
-
+#endif
+ 
 #ifdef HAVE_MMAP
     if (whence == SEEK_SET)
         rrd_file->pos = off;

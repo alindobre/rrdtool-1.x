@@ -1,9 +1,9 @@
 /*****************************************************************************
- * RRDtool 1.4.7  Copyright by Tobi Oetiker, 1997-2012
+ * RRDtool 1.4.8  Copyright by Tobi Oetiker, 1997-2013
  *****************************************************************************
  * rrd_fetch.c  read date from an rrd to use for further processing
  *****************************************************************************
- * $Id: rrd_fetch.c 2267 2012-01-24 10:08:48Z oetiker $
+ * $Id$
  * $Log$
  * Revision 1.8  2004/05/18 18:53:03  oetiker
  * big spell checking patch -- slif@bellsouth.net
@@ -374,8 +374,8 @@ int rrd_fetch_fn(
     rra_start_time = (rra_end_time
                       - (*step * (rrd.rra_def[chosen_rra].row_cnt - 1)));
     /* here's an error by one if we don't be careful */
-    start_offset = (long) (*start + *step - rra_start_time) / (long) *step;
-    end_offset = (long) (rra_end_time - *end) / (long) *step;
+    start_offset = ((long long) *start + (long long)*step - (long long)rra_start_time) / (long long) *step;
+    end_offset = ((long long) rra_end_time - (long long)*end) / (long long) *step;
 #ifdef DEBUG
     fprintf(stderr,
             "rra_start %lu, rra_end %lu, start_off %li, end_off %li\n",

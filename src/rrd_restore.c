@@ -1,12 +1,12 @@
 /*****************************************************************************
- * RRDtool 1.4.7  Copyright by Tobi Oetiker, 1997-2012                    
+ * RRDtool 1.4.8  Copyright by Tobi Oetiker, 1997-2013                    
  *****************************************************************************
  * rrd_restore.c  Contains logic to parse XML input and create an RRD file
  * This file:
  * Copyright (C) 2008  Florian octo Forster  (original libxml2 code)
  * Copyright (C) 2008,2009 Tobias Oetiker
  *****************************************************************************
- * $Id: rrd_restore.c 2267 2012-01-24 10:08:48Z oetiker $
+ * $Id$
  *************************************************************************** */
 
 #include "rrd_tool.h"
@@ -227,18 +227,12 @@ static int get_xml_time_t(
     time_t temp;    
     if ((text = get_xml_text(reader)) != NULL){
         errno = 0;        
-#ifdef TIME_T_IS_32BIT
+#if SIZEOF_TIME_T == 4
         temp = strtol((char *)text,NULL, 0);
-#else
-#ifdef TIME_T_IS_64BIT
+#elif SIZEOF_TIME_T == 8
         temp = strtoll((char *)text,NULL, 0);        
 #else
-        if (sizeof(time_t) == 4){
-            temp = strtol((char *)text,NULL, 0);
-        } else {
-            temp = strtoll((char *)text,NULL, 0);
-        }
-#endif
+#error "Don't know how to deal with TIME_T other than 4 or 8 bytes"
 #endif    
         if (errno>0){
             rrd_set_error("ling %d: get_xml_time_t from '%s' %s",

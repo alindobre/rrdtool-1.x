@@ -16,9 +16,9 @@ SSYYNNOOPPSSIISS
 
        HHRRUULLEE::_v_a_l_u_e##_c_o_l_o_r[::_l_e_g_e_n_d][::ddaasshheess[==_o_n___s[,_o_f_f___s[,_o_n___s,_o_f_f___s]...]][::ddaasshh--ooffffsseett==_o_f_f_s_e_t]]
 
-       LLIINNEE[_w_i_d_t_h]::_v_a_l_u_e[##_c_o_l_o_r][::[_l_e_g_e_n_d][::SSTTAACCKK]][::ddaasshheess[==_o_n___s[,_o_f_f___s[,_o_n___s,_o_f_f___s]...]][::ddaasshh--ooffffsseett==_o_f_f_s_e_t]]
+       LLIINNEE[_w_i_d_t_h]::_v_a_l_u_e[##_c_o_l_o_r][::[_l_e_g_e_n_d][::SSTTAACCKK][::sskkiippssccaallee][::ddaasshheess[==_o_n___s[,_o_f_f___s[,_o_n___s,_o_f_f___s]...]][::ddaasshh--ooffffsseett==_o_f_f_s_e_t]]
 
-       AARREEAA::_v_a_l_u_e[##_c_o_l_o_r][::[_l_e_g_e_n_d][::SSTTAACCKK]]
+       AARREEAA::_v_a_l_u_e[##_c_o_l_o_r][::[_l_e_g_e_n_d][::SSTTAACCKK][::sskkiippssccaallee]]
 
        TTIICCKK::_v_n_a_m_e##_r_r_g_g_b_b[_a_a][::_f_r_a_c_t_i_o_n[::_l_e_g_e_n_d]]
 
@@ -179,7 +179,7 @@ DDEESSCCRRIIPPTTIIOONN
        will have no effect on the scale of the graph. If a HRULE is outside
        the graphing area it will just not be visible.
 
-       _LL_II_NN_EE_[_w_i_d_t_h_]_::_v_a_l_u_e_[_##_c_o_l_o_r_]_[_::_[_l_e_g_e_n_d_]_[_::_SS_TT_AA_CC_KK_]_]_[_::_dd_aa_ss_hh_ee_ss_[_==_o_n___s_[_,_o_f_f___s_[_,_o_n___s_,_o_f_f___s_]_._._._]_]_[_::_dd_aa_ss_hh_--_oo_ff_ff_ss_ee_tt_==_o_f_f_s_e_t_]_]
+       _LL_II_NN_EE_[_w_i_d_t_h_]_::_v_a_l_u_e_[_##_c_o_l_o_r_]_[_::_[_l_e_g_e_n_d_]_[_::_SS_TT_AA_CC_KK_]_[_::_ss_kk_ii_pp_ss_cc_aa_ll_ee_]_]_[_::_dd_aa_ss_hh_ee_ss_[_==_o_n___s_[_,_o_f_f___s_[_,_o_n___s_,_o_f_f___s_]_._._._]_]_[_::_dd_aa_ss_hh_--_oo_ff_ff_ss_ee_tt_==_o_f_f_s_e_t_]_]
 
        Draw a line of the specified width onto the graph. _w_i_d_t_h can be a
        floating point number. If the color is not specified, the drawing is
@@ -190,6 +190,11 @@ DDEESSCCRRIIPPTTIIOONN
        line is stacked on top of the previous element which can be a LLIINNEE or
        an AARREEAA.
 
+       Normally the graphing function makes sure that the entire LLIINNEE or AARREEAA
+       is visible in the chart. The scaling of the chart will be modified
+       accordingly if necessary. Any LLIINNEE or AARREEAA can be excluded from this
+       process by adding the option sskkiippssccaallee.
+
        The ddaasshheess modifier enables dashed line style. Without any further
        options a symmetric dashed line with a segment length of 5 pixels will
        be drawn. The dash pattern can be changed if the ddaasshheess== parameter is
@@ -199,9 +204,9 @@ DDEESSCCRRIIPPTTIIOONN
        _o_f_f_s_e_t into the pattern at which the stroke begins.
 
        When you do not specify a color, you cannot specify a legend.  Should
-       you want to use STACK, use the "LINEx:<value>::STACK" form.
+       you want to use SSTTAACCKK, use the "LINEx:<value>::STACK" form.
 
-       _AA_RR_EE_AA_::_v_a_l_u_e_[_##_c_o_l_o_r_]_[_::_[_l_e_g_e_n_d_]_[_::_SS_TT_AA_CC_KK_]_]
+       _AA_RR_EE_AA_::_v_a_l_u_e_[_##_c_o_l_o_r_]_[_::_[_l_e_g_e_n_d_]_[_::_SS_TT_AA_CC_KK_]_[_::_ss_kk_ii_pp_ss_cc_aa_ll_ee_]_]
 
        See LLIINNEE, however the area between the x-axis and the line will be
        filled.
@@ -430,4 +435,4 @@ AAUUTTHHOORR
 
 
 
-1.4.7                             2012-01-20                 RRDGRAPH_GRAPH(1)
+1.4.8                             2013-05-23                 RRDGRAPH_GRAPH(1)

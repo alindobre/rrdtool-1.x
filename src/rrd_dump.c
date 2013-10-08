@@ -1,9 +1,9 @@
 /*****************************************************************************
- * RRDtool 1.4.7  Copyright by Tobi Oetiker, 1997-2012
+ * RRDtool 1.4.8  Copyright by Tobi Oetiker, 1997-2013
  *****************************************************************************
  * rrd_dump  Display a RRD
  *****************************************************************************
- * $Id: rrd_dump.c 2267 2012-01-24 10:08:48Z oetiker $
+ * $Id$
  * $Log$
  * Revision 1.7  2004/05/25 20:53:21  oetiker
  * prevent small leak when resources are exhausted -- Mike Slifcak

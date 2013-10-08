@@ -407,7 +407,7 @@ OOPPTTIIOONNSS
         u     Underline
 
        More details on
-       <http://developer.gnome.org/doc/API/2.0/pango/PangoMarkupFormat.html>.
+       <http://developer.gnome.org/pango/stable/PangoMarkupFormat.html>.
 
        [--GG|----ggrraapphh--rreennddeerr--mmooddee {nnoorrmmaall,mmoonnoo}]
 
@@ -524,4 +524,4 @@ AAUUTTHHOORR
 
 
 
-1.4.7                             2010-12-07                       RRDGRAPH(1)
+1.4.8                             2013-05-23                       RRDGRAPH(1)

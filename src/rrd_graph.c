@@ -1,5 +1,5 @@
 /****************************************************************************
- * RRDtool 1.4.7  Copyright by Tobi Oetiker, 1997-2012
+ * RRDtool 1.4.8  Copyright by Tobi Oetiker, 1997-2013
  ****************************************************************************
  * rrd__graph.c  produce graphs from data in rrdfiles
  ****************************************************************************/
@@ -316,6 +316,14 @@ int im_free(
 
     if (im->daemon_addr != NULL)
       free(im->daemon_addr);
+
+    if (im->gdef_map){
+        g_hash_table_destroy(im->gdef_map);        
+    }
+
+    if (im->rrd_map){
+        g_hash_table_destroy(im->rrd_map);        
+    }
 
     for (i = 0; i < (unsigned) im->gdes_c; i++) {
         if (im->gdes[i].data_first) {
@@ -821,7 +829,6 @@ int data_fetch(
     image_desc_t *im)
 {
     int       i, ii;
-    int       skip;
 
     /* pull the data from the rrd files ... */
     for (i = 0; i < (int) im->gdes_c; i++) {
@@ -829,33 +836,21 @@ int data_fetch(
         if (im->gdes[i].gf != GF_DEF)
             continue;
 
-        skip = 0;
         /* do we have it already ? */
-        for (ii = 0; ii < i; ii++) {
-            if (im->gdes[ii].gf != GF_DEF)
-                continue;
-            if ((strcmp(im->gdes[i].rrd, im->gdes[ii].rrd) == 0)
-                && (im->gdes[i].cf == im->gdes[ii].cf)
-                && (im->gdes[i].cf_reduce == im->gdes[ii].cf_reduce)
-                && (im->gdes[i].start_orig == im->gdes[ii].start_orig)
-                && (im->gdes[i].end_orig == im->gdes[ii].end_orig)
-                && (im->gdes[i].step_orig == im->gdes[ii].step_orig)) {
-                /* OK, the data is already there.
-                 ** Just copy the header portion
-                 */
-                im->gdes[i].start = im->gdes[ii].start;
-                im->gdes[i].end = im->gdes[ii].end;
-                im->gdes[i].step = im->gdes[ii].step;
-                im->gdes[i].ds_cnt = im->gdes[ii].ds_cnt;
-                im->gdes[i].ds_namv = im->gdes[ii].ds_namv;
-                im->gdes[i].data = im->gdes[ii].data;
-                im->gdes[i].data_first = 0;
-                skip = 1;
-            }
-            if (skip)
-                break;
-        }
-        if (!skip) {
+        gpointer value;
+        char *key = gdes_fetch_key(im->gdes[i]);
+        gboolean ok = g_hash_table_lookup_extended(im->rrd_map,key,NULL,&value);
+        free(key);
+        if (ok){
+            ii = GPOINTER_TO_INT(value);
+            im->gdes[i].start = im->gdes[ii].start;
+            im->gdes[i].end = im->gdes[ii].end;
+            im->gdes[i].step = im->gdes[ii].step;
+            im->gdes[i].ds_cnt = im->gdes[ii].ds_cnt;
+            im->gdes[i].ds_namv = im->gdes[ii].ds_namv;
+            im->gdes[i].data = im->gdes[ii].data;
+            im->gdes[i].data_first = 0;
+        } else {
             unsigned long ft_step = im->gdes[i].step;   /* ft_step will record what we got from fetch */
 
             /* Flush the file if
@@ -950,16 +945,16 @@ long find_var(
     image_desc_t *im,
     char *key)
 {
-    long      ii;
-
-    for (ii = 0; ii < im->gdes_c - 1; ii++) {
-        if ((im->gdes[ii].gf == GF_DEF
-             || im->gdes[ii].gf == GF_VDEF || im->gdes[ii].gf == GF_CDEF)
-            && (strcmp(im->gdes[ii].vname, key) == 0)) {
-            return ii;
-        }
+    long match = -1;
+    gpointer value;
+    gboolean ok = g_hash_table_lookup_extended(im->gdef_map,key,NULL,&value);
+    if (ok){
+        match = GPOINTER_TO_INT(value);
     }
-    return -1;
+
+    /* printf("%s -> %ld\n",key,match); */
+
+    return match;    
 }
 
 /* find the greatest common divisor for all the numbers
@@ -1290,7 +1285,7 @@ int data_proc(
                     /* GF_TICK: the data values are not
                      ** relevant for min and max
                      */
-                    if (finite(paintval) && im->gdes[ii].gf != GF_TICK) {
+                    if (finite(paintval) && im->gdes[ii].gf != GF_TICK && !im->gdes[ii].skipscale) {
                         if ((isnan(minval) || paintval < minval) &&
                             !(im->logarithmic && paintval <= 0.0))
                             minval = paintval;
@@ -1380,10 +1375,18 @@ static int find_first_weekday(void){
     if (first_weekday == -1){
 #ifdef HAVE__NL_TIME_WEEK_1STDAY
         /* according to http://sourceware.org/ml/libc-locales/2009-q1/msg00011.html */
+        /* See correct way here http://pasky.or.cz/dev/glibc/first_weekday.c */
+        first_weekday = nl_langinfo (_NL_TIME_FIRST_WEEKDAY)[0];
+        int week_1stday;
         long week_1stday_l = (long) nl_langinfo (_NL_TIME_WEEK_1STDAY);
-        if (week_1stday_l == 19971130) first_weekday = 0; /* Sun */
-        else if (week_1stday_l == 19971201) first_weekday = 1; /* Mon */
-        else first_weekday = 1; /* we go for a monday default */
+        if (week_1stday_l == 19971130) week_1stday = 0; /* Sun */
+        else if (week_1stday_l == 19971201) week_1stday = 1; /* Mon */
+        else
+        {
+            first_weekday = 1;
+            return first_weekday; /* we go for a monday default */
+        }
+        first_weekday=(week_1stday + first_weekday - 1) % 7;
 #else
         first_weekday = 1;
 #endif
@@ -1402,6 +1405,8 @@ time_t find_first_time(
     struct tm tm;
 
     localtime_r(&start, &tm);
+    /* let mktime figure this dst on its own */
+    tm.tm_isdst = -1;
 
     switch (baseint) {
     case TMT_SECOND:
@@ -1470,6 +1475,8 @@ time_t find_next_time(
     time_t    madetime;
 
     localtime_r(&current, &tm);
+    /* let mktime figure this dst on its own */
+    tm.tm_isdst = -1;
 
     int limit = 2;
     switch (baseint) {
@@ -1705,7 +1712,6 @@ int leg_place(
     int       leg_c = 0;
     double    leg_x = border;
     int       leg_y = 0; //im->yimg;
-    int       leg_y_prev = 0; // im->yimg;
     int       leg_cc;
     double    glue = 0;
     int       i, ii, mark = 0;
@@ -1881,7 +1887,6 @@ int leg_place(
                         +(double)legspace[ii]
                         + glue;
                 }
-                leg_y_prev = leg_y;
                 if (leg_x > border || prt_fctn == 's')
                     leg_y += im->text_prop[TEXT_PROP_LEGEND].size * 1.8;
                 if (prt_fctn == 's')
@@ -2100,7 +2105,7 @@ int draw_horizontal_grid(
                             }
                         }
                         else {
-                           sprintf(graph_label_right,im->second_axis_format,sval);
+                           sprintf(graph_label_right,im->second_axis_format,sval,"");
                         }
                         gfx_text ( im,
                                X1+7, Y0,
@@ -3810,6 +3815,7 @@ int gdes_alloc(
     im->gdes[im->gdes_c - 1].step = im->step;
     im->gdes[im->gdes_c - 1].step_orig = im->step;
     im->gdes[im->gdes_c - 1].stack = 0;
+    im->gdes[im->gdes_c - 1].skipscale = 0;
     im->gdes[im->gdes_c - 1].linewidth = 0;
     im->gdes[im->gdes_c - 1].debug = 0;
     im->gdes[im->gdes_c - 1].start = im->start;
@@ -4069,7 +4075,8 @@ void rrd_graph_init(
 #ifdef HAVE_TZSET
     tzset();
 #endif
-
+    im->gdef_map = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,NULL);
+    im->rrd_map = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,NULL);
     im->base = 1000;
     im->daemon_addr = NULL;
     im->draw_x_grid = 1;

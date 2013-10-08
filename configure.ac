@@ -1,6 +1,6 @@
 dnl RRDtool AutoConf script ... 
 dnl ---------------------------
-dnl $Id: configure.ac 2267 2012-01-24 10:08:48Z oetiker $
+dnl $Id$
 dnl
 dnl Created by Jeff Allen, Tobi Oetiker, Blair Zajac
 dnl
@@ -13,14 +13,14 @@ AC_PREREQ(2.59)
 
 dnl the official version number is
 dnl a.b.c
-AC_INIT([rrdtool],[1.4.7])
+AC_INIT([rrdtool],[1.4.8])
 
 dnl for testing a numberical version number comes handy
 dnl the released version are
 dnl a.bccc
 dnl the devel versions will be something like
 dnl a.b999yymmddhh 
-NUMVERS=1.4007
+NUMVERS=1.4008
 AC_SUBST(NUMVERS)
 
 dnl for the linker to understand which versions the library are compatible with
@@ -31,7 +31,7 @@ dnl - if any functionality was removed do c++,r=0,a=0.
 dnl
 dnl see http://sourceware.org/autobook/autobook/autobook_91.html
 dnl 
-LIBVERS=6:0:2
+LIBVERS=6:1:2
 AC_SUBST(LIBVERS)
 
 AC_CANONICAL_TARGET
@@ -280,6 +280,9 @@ AC_CHECK_DECLS(posix_fadvise, [], [], [#define _XOPEN_SOURCE 600
 #include <fcntl.h>])
 AC_CHECK_FUNCS(posix_fadvise)
 
+dnl can we use posix_fallocate
+AC_CHECK_FUNCS(posix_fallocate)
+
 CONFIGURE_PART(Libintl Processing)
 
 AM_GNU_GETTEXT_VERSION(0.17)
@@ -475,23 +478,10 @@ AC_LINK_IFELSE(
       )
     ]  
 )
+AC_LANG_POP(C)
 
 dnl is time_t 32 of 64 bit ?
-AC_DEFINE([TIME_T_IS_32BIT], [], [time_t is 32bit])
-AC_DEFINE([TIME_T_IS_64BIT], [], [time_t is 64bit])
-AC_MSG_CHECKING([the type of time_t])
 AC_CHECK_SIZEOF([time_t])
-if test "x$ac_cv_sizeof_time_t" = "x4"; then
-  AC_MSG_RESULT([time_t is 32 bit])
-  AC_DEFINE([TIME_T_IS_32BIT])
-elif test "x$ac_cv_sizeof_time_t" = "x8"; then
-  AC_MSG_RESULT([time_t is 64 bit])
-  AC_DEFINE([TIME_T_IS_64BIT])
-else
-  AC_MSG_ERROR([can not figure type of time_t])
-fi
-
-AC_LANG_POP(C)
 
 CONFIGURE_PART(Find 3rd-Party Libraries)
 
@@ -615,7 +605,7 @@ langpref=$prefix
 test "$langpref" = '$(DESTDIR)NONE' && langpref='$(DESTDIR)'$ac_default_prefix
 test "$langpref" = "NONE" && langpref=$ac_default_prefix
 
-PERL_MAKE_OPTIONS="PREFIX=$langpref LIB=$langpref/lib/perl/$PERL_VERSION"
+PERL_MAKE_OPTIONS="PREFIX=$langpref INSTALL_BASE= LIB=$langpref/lib/perl/$PERL_VERSION"
 
 dnl pass additional perl options when generating Makefile from Makefile.PL
 AC_ARG_ENABLE(perl-site-install,

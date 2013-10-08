@@ -46,6 +46,8 @@
 #define FULL_SIZE_MODE     0x200    /* -width and -height indicate the total size of the image */
 #define NO_RRDTOOL_TAG 0x400  /* disable the rrdtool tag */
 
+#define gdes_fetch_key(x)  sprintf_alloc("%s:%d:%d:%d:%d",x.rrd,x.cf,x.cf_reduce,x.start_orig,x.end_orig,x.step_orig)
+
 enum tmt_en { TMT_SECOND = 0, TMT_MINUTE, TMT_HOUR, TMT_DAY,
     TMT_WEEK, TMT_MONTH, TMT_YEAR
 };
@@ -159,6 +161,7 @@ typedef struct graph_desc_t {
     enum gf_en gf;      /* graphing function */
     int       stack;    /* boolean */
     int       debug;    /* boolean */
+    int       skipscale; /* boolean */
     char      vname[MAX_VNAME_LEN + 1]; /* name of the variable */
     long      vidx;     /* gdes reference */
     char      rrd[1024];    /* name of the rrd_file containing data */
@@ -198,6 +201,7 @@ typedef struct graph_desc_t {
     double   *p_dashes; /* pointer do dash array which keeps the lengths of dashes */
     int       ndash;    /* number of dash segments */
     double    offset;   /* dash offset along the line */
+
 
     enum txa_en txtalign;   /* change default alignment strategy for text */
 } graph_desc_t;
@@ -283,6 +287,8 @@ typedef struct image_desc_t {
     PangoLayout *layout; /* the pango layout we use for writing fonts */
     rrd_info_t *grinfo; /* root pointer to extra graph info */
     rrd_info_t *grinfo_current; /* pointing to current entry */
+    GHashTable* gdef_map;  /* a map of all *def gdef entries for quick access */
+    GHashTable* rrd_map;  /* a map of all rrd files in use for gdef entries */
 } image_desc_t;
 
 /* Prototypes */
