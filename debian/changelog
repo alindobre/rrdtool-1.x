@@ -1,5 +1,6 @@
-rrdtool (1.4.8-1) UNRELEASED; urgency=low
+rrdtool (1.4.8-0.1) UNRELEASED; urgency=low
 
+  * Non-maintainer upload.
   * Imported upstream version 1.4.8.
 
  -- Alin Dobre <alin.dobre@elastichosts.com>  Fri, 11 Oct 2013 10:41:35 +0100
