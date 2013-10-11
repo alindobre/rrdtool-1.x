@@ -1,3 +1,9 @@
+rrdtool (1.4.8-1) UNRELEASED; urgency=low
+
+  * Imported upstream version 1.4.8.
+
+ -- Alin Dobre <alin.dobre@elastichosts.com>  Fri, 11 Oct 2013 10:41:35 +0100
+
 rrdtool (1.4.7-3) UNRELEASED; urgency=low
 
   * Fixed changelog of 1.4.7-2 regarding the versioned build-dep on tcl-dev.
